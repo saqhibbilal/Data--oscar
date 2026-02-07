@@ -1,24 +1,36 @@
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { WalletGuard } from "../components/WalletGuard";
+import { DashboardTab } from "../components/dashboard/DashboardTab";
 import { CreatorTab } from "../components/dashboard/CreatorTab";
 import { LabelerTab } from "../components/dashboard/LabelerTab";
 
-type TabId = "creator" | "labeler";
+type TabId = "overview" | "creator" | "labeler";
 
 export function Dashboard() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const tab = (searchParams.get("tab") as TabId) || "labeler";
+  const tab = (searchParams.get("tab") as TabId) || "overview";
   const setTab = (t: TabId) => setSearchParams({ tab: t });
 
   return (
     <WalletGuard>
       <div className="space-y-6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard</h1>
-          <p className="text-zinc-500 text-sm mt-1">Create tasks or label and earn reputation.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Data Labeling</h1>
+          <p className="text-zinc-500 text-sm mt-1">Overview, create tasks, or label and earn reputation.</p>
         </div>
 
         <div className="flex gap-1 p-1 rounded-lg bg-surface-800 border border-border w-fit">
+          <button
+            type="button"
+            onClick={() => setTab("overview")}
+            className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              tab === "overview"
+                ? "bg-surface-600 text-white border border-border-bright"
+                : "text-zinc-500 hover:text-zinc-300"
+            }`}
+          >
+            Dashboard
+          </button>
           <button
             type="button"
             onClick={() => setTab("creator")}
@@ -28,7 +40,7 @@ export function Dashboard() {
                 : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            I'm a creator
+            Creator
           </button>
           <button
             type="button"
@@ -39,10 +51,11 @@ export function Dashboard() {
                 : "text-zinc-500 hover:text-zinc-300"
             }`}
           >
-            I'm a labeler
+            Labeler
           </button>
         </div>
 
+        {tab === "overview" && <DashboardTab />}
         {tab === "creator" && <CreatorTab />}
         {tab === "labeler" && <LabelerTab />}
       </div>

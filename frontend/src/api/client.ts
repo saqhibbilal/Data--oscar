@@ -8,6 +8,7 @@ export type Task = {
   description?: string | null;
   rubrics?: string | null;
   rubric_type?: string | null;
+  registered_on_chain?: number;
   created_at: number;
   items?: Array<{
     id: number;
@@ -113,5 +114,47 @@ export type LabelerActivityItem = {
 export async function fetchLabelerActivity(pubkey: string): Promise<LabelerActivityItem[]> {
   const res = await fetch(`${API_BASE}/labeler/${encodeURIComponent(pubkey)}/activity`);
   if (!res.ok) throw new Error("Failed to fetch activity");
+  return res.json();
+}
+
+export type DashboardStats = {
+  task_owners: Array<{ owner_pubkey: string; task_count: number }>;
+  tasks: Array<{
+    id: number;
+    owner_pubkey: string;
+    task_type: number;
+    registered_on_chain: number;
+    created_at: number;
+    item_count: number;
+    submission_count: number;
+  }>;
+  labelers: Array<{ labeler_pubkey: string; task_count: number; submission_count: number }>;
+};
+
+export async function fetchDashboardStats(): Promise<DashboardStats> {
+  const res = await fetch(`${API_BASE}/dashboard/stats`);
+  if (!res.ok) throw new Error("Failed to fetch dashboard stats");
+  return res.json();
+}
+
+export async function markTaskRegistered(taskId: number): Promise<void> {
+  const res = await fetch(`${API_BASE}/tasks/${taskId}/registered`, { method: "PATCH" });
+  if (!res.ok) throw new Error("Failed to mark task registered");
+}
+
+export type RemainingTask = {
+  task_id: number;
+  owner_pubkey: string;
+  dataset_ref_hex: string;
+  task_type: number;
+  registered_on_chain: number;
+  item_count: number;
+  submitted_count: number;
+  items_left: number;
+};
+
+export async function fetchLabelerRemaining(pubkey: string): Promise<RemainingTask[]> {
+  const res = await fetch(`${API_BASE}/labeler/${encodeURIComponent(pubkey)}/remaining`);
+  if (!res.ok) throw new Error("Failed to fetch remaining tasks");
   return res.json();
 }

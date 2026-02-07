@@ -6,7 +6,6 @@ import { fetchTasks, type Task } from "../../api/client";
 const TASK_TYPE_LABELS: Record<number, string> = {
   0: "Text",
   1: "Image",
-  2: "Audio",
 };
 
 export function CreatorTab() {
@@ -67,7 +66,9 @@ export function CreatorTab() {
                     {TASK_TYPE_LABELS[t.task_type] ?? "Unknown"}
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 mt-1">Owner: you</p>
+                <p className="text-xs text-zinc-500 mt-1">
+                  Owner: you · {t.registered_on_chain ? "On-chain" : "Pending"}
+                </p>
               </Link>
             </li>
           ))}

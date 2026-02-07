@@ -119,3 +119,18 @@ tasksRouter.get("/:id/my-submissions", (req: Request, res: Response) => {
     res.status(500).json({ error: String(e) });
   }
 });
+
+tasksRouter.patch("/:id/registered", (req: Request, res: Response) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (Number.isNaN(id)) {
+      res.status(400).json({ error: "Invalid task id" });
+      return;
+    }
+    const db = getDb();
+    db.prepare("UPDATE tasks SET registered_on_chain = 1 WHERE id = ?").run(id);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: String(e) });
+  }
+});

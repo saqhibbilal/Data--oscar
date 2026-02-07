@@ -7,13 +7,11 @@ import { WalletGuard } from "../components/WalletGuard";
 const TASK_TYPES = [
   { value: 0, label: "Text" },
   { value: 1, label: "Image" },
-  { value: 2, label: "Audio" },
 ];
 
 const CONTENT_TYPES: Record<number, string> = {
   0: "text",
   1: "image",
-  2: "audio",
 };
 
 function generateDatasetRef(): string {
@@ -186,17 +184,17 @@ export function CreateTask() {
               <li key={i} className="flex gap-2 items-start flex-wrap">
                 <input
                   type="text"
-                  placeholder={taskType === 0 ? "Text content" : taskType === 1 ? "Image URL or upload below" : "Audio URL or upload below"}
+                  placeholder={taskType === 0 ? "Text content" : "Image URL or upload below"}
                   value={item.content}
                   onChange={(e) => updateItem(i, "content", e.target.value)}
                   className="flex-1 min-w-[200px] bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
                 />
-                {(taskType === 1 || taskType === 2) && (
+                {taskType === 1 && (
                   <label className="px-3 py-2 bg-surface-600 border border-border rounded text-sm text-zinc-300 cursor-pointer hover:bg-surface-500">
                     Upload
                     <input
                       type="file"
-                      accept={taskType === 1 ? "image/*" : "audio/*"}
+                      accept="image/*"
                       className="hidden"
                       disabled={uploading}
                       onChange={async (e) => {

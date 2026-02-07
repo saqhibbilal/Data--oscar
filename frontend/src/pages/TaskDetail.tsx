@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { fetchTask, submitLabels, fetchAggregated, fetchMySubmissions, type Task } from "../api/client";
+import { fetchTask, submitLabels, fetchAggregated, fetchMySubmissions, markTaskRegistered, type Task } from "../api/client";
 import { WalletGuard } from "../components/WalletGuard";
 import { registerTaskOnChain } from "../solana/initTask";
 
@@ -66,7 +66,7 @@ export function TaskDetail() {
       await submitLabels(task.id, publicKey.toBase58(), submissions);
       setLabels({});
       setMySubmissions((prev) => ({ ...prev, ...Object.fromEntries(submissions.map((s) => [s.item_id_hex, s.label_value])) }));
-      navigate("/");
+      navigate("/?tab=labeler");
     } catch (e: any) {
       setError(e.message || "Submit failed");
     } finally {
@@ -84,6 +84,7 @@ export function TaskDetail() {
     setError(null);
     try {
       await registerTaskOnChain(connection, wallet, task);
+      await markTaskRegistered(task.id);
       setRegistered(true);
     } catch (e: any) {
       const msg = e?.message || String(e);
@@ -129,7 +130,7 @@ export function TaskDetail() {
         </button>
         <h1 className="text-2xl font-bold text-white tracking-tight">Task #{task.id}</h1>
         <span className="text-xs text-zinc-500 bg-surface-600 px-2 py-1 rounded">
-          {task.task_type === 0 ? "Text" : task.task_type === 1 ? "Image" : "Audio"}
+          {task.task_type === 0 ? "Text" : "Image"}
         </span>
       </div>
       {task.description && (
@@ -156,7 +157,7 @@ export function TaskDetail() {
       {isOwner && (
         <div className="rounded-lg border border-border bg-surface-800 p-4">
           <p className="text-sm text-zinc-400 mb-2">
-            As <strong className="text-white">task owner</strong>: register this task on Solana once so the oracle can submit verified results. Labelers never need to do this.
+            As <strong className="text-white">task owner</strong>: register this task on Solana once so the oracle can submit verified results. Labelers do not use Solana to submit labels.
           </p>
           <button
             type="button"
@@ -272,13 +273,6 @@ function ItemContent({
         alt="Item"
         className="max-w-full max-h-48 rounded border border-border object-contain"
       />
-    );
-  }
-  if (type === "audio") {
-    return (
-      <audio controls className="w-full max-w-md" src={content}>
-        Your browser does not support audio.
-      </audio>
     );
   }
   return <span>{content}</span>;

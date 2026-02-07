@@ -20,6 +20,7 @@ export function getDb(): Database.Database {
       description TEXT,
       rubrics TEXT,
       rubric_type TEXT,
+      registered_on_chain INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
@@ -72,6 +73,9 @@ export function getDb(): Database.Database {
   if (!taskNames.has("description")) db.exec("ALTER TABLE tasks ADD COLUMN description TEXT");
   if (!taskNames.has("rubrics")) db.exec("ALTER TABLE tasks ADD COLUMN rubrics TEXT");
   if (!taskNames.has("rubric_type")) db.exec("ALTER TABLE tasks ADD COLUMN rubric_type TEXT");
+  if (!taskNames.has("registered_on_chain")) {
+    db.exec("ALTER TABLE tasks ADD COLUMN registered_on_chain INTEGER NOT NULL DEFAULT 0");
+  }
 
   return db;
 }
