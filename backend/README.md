@@ -12,11 +12,13 @@ npm install
 ## Run
 
 **Dev (TS):**
+
 ```bash
 npm run dev
 ```
 
 **Prod:**
+
 ```bash
 npm run build
 npm start
@@ -26,13 +28,13 @@ Server runs at `http://localhost:3000` (or `PORT` env).
 
 ## API
 
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/tasks` | Create task. Body: `{ "owner_pubkey", "dataset_ref_hex", "task_type" (0=text, 1=image, 2=audio), "items"?: [{ "item_id_hex", "content?", "content_type?" }] }` |
-| GET | `/tasks` | List all tasks |
-| GET | `/tasks/:id` | Get task and its items |
-| POST | `/tasks/:id/submit` | Submit labels. Body: `{ "labeler_pubkey", "submissions": [{ "item_id_hex", "label_value" }] }` |
-| GET | `/tasks/:id/aggregated` | Get aggregated results (for oracle) |
+| Method | Path                    | Description                                                                                                                                                    |
+| ------ | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| POST   | `/tasks`                | Create task. Body: `{ "owner_pubkey", "dataset_ref_hex", "task_type" (0=text, 1=image, 2=audio), "items"?: [{ "item_id_hex", "content?", "content_type?" }] }` |
+| GET    | `/tasks`                | List all tasks                                                                                                                                                 |
+| GET    | `/tasks/:id`            | Get task and its items                                                                                                                                         |
+| POST   | `/tasks/:id/submit`     | Submit labels. Body: `{ "labeler_pubkey", "submissions": [{ "item_id_hex", "label_value" }] }`                                                                 |
+| GET    | `/tasks/:id/aggregated` | Get aggregated results (for oracle)                                                                                                                            |
 
 ## Aggregation
 
@@ -72,3 +74,5 @@ npm run oracle      # submit pending results to devnet
 Optional env: `SOLANA_RPC_URL` (default devnet), `ORACLE_KEYPAIR_PATH` (default `./oracle-keypair.json`).
 
 The oracle only submits rows with `submitted_to_chain = 0` and sets them to `1` after a successful tx. Tasks must exist on-chain (same `owner_pubkey` and `dataset_ref_hex` as in the backend).
+
+# AMmT8iXxnn56Uzcjy5xSrvTAaHjVKA5aFjAcFHSBm5Ev
