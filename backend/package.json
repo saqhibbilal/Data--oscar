@@ -7,9 +7,12 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev": "tsx src/index.ts",
-    "aggregate": "tsx src/aggregation.ts"
+    "aggregate": "tsx src/aggregation.ts",
+    "oracle": "tsx src/oracle.ts"
   },
   "dependencies": {
+    "@coral-xyz/anchor": "^0.32.1",
+    "@solana/web3.js": "^1.95.3",
     "better-sqlite3": "^11.6.0",
     "express": "^4.21.0",
     "media-typer": "^1.1.0"

@@ -11,4 +11,8 @@ Portfolio project: off-chain labeling + on-chain verification via an oracle. Pha
 
 - **Folder:** [backend/](backend/) – Express API, SQLite (tasks, items, submissions, aggregated_results), aggregation script (majority vote).
 - Run: `cd backend && npm install && npm run dev`. See [backend/README.md](backend/README.md).
-- Next: Phase 3 adds the oracle script that reads aggregated data and submits to the chain.
+## Phase 3 – Oracle
+
+- **In backend:** Run `npm run oracle` (after `npm run aggregate`). Uses `backend/idl/anchor_data.json` and oracle keypair; submits pending aggregated results to the Solana program. See [backend/README.md](backend/README.md).
+- **Prereqs:** Call **init_config** with the oracle pubkey once; put the oracle keypair in `backend/` (e.g. `oracle-keypair.json`). Copy IDL from `anchor_data/target/idl/` to `backend/idl/` after each `anchor build`.
+- Next: Phase 4 is the React frontend (Phantom, tasks, submit labels, view results).

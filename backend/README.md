@@ -46,4 +46,29 @@ npm run aggregate
 - Majority vote → `final_label_hex` (64 bytes hex), `confidence` (0–1000)
 - Writes/updates `data/labels.sqlite` → `aggregated_results`
 
-Phase 3 oracle will read `GET /tasks/:id/aggregated` (or DB directly) and push to the Solana program.
+## Phase 3 – Oracle (submit to chain)
+
+The oracle reads pending aggregated results from the DB and submits them to the Solana program.
+
+**1. One-time setup**
+
+- Generate an oracle keypair (do not use your main wallet):
+  ```bash
+  solana-keygen new -o oracle-keypair.json
+  ```
+- On-chain: call **init_config** with this key’s pubkey (so only this key can submit). Do this once after deploy.
+- Put `oracle-keypair.json` in the `backend/` folder (or set `ORACLE_KEYPAIR_PATH` to its path).
+- Ensure `backend/idl/anchor_data.json` exists (copy from `anchor_data/target/idl/anchor_data.json` after `anchor build`).
+
+**2. Run**
+
+From `backend/`:
+
+```bash
+npm run aggregate   # if you have new submissions
+npm run oracle      # submit pending results to devnet
+```
+
+Optional env: `SOLANA_RPC_URL` (default devnet), `ORACLE_KEYPAIR_PATH` (default `./oracle-keypair.json`).
+
+The oracle only submits rows with `submitted_to_chain = 0` and sets them to `1` after a successful tx. Tasks must exist on-chain (same `owner_pubkey` and `dataset_ref_hex` as in the backend).

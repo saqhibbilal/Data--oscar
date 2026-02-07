@@ -44,13 +44,25 @@ export function getDb(): Database.Database {
       item_id_hex TEXT NOT NULL,
       final_label_hex TEXT NOT NULL,
       confidence INTEGER NOT NULL,
+      representative_labeler_pubkey TEXT,
       aggregated_at INTEGER NOT NULL DEFAULT (unixepoch()),
+      submitted_to_chain INTEGER NOT NULL DEFAULT 0,
       UNIQUE(task_id, item_id_hex)
     );
 
     CREATE INDEX IF NOT EXISTS idx_submissions_task_item ON submissions(task_id, item_id_hex);
     CREATE INDEX IF NOT EXISTS idx_aggregated_task ON aggregated_results(task_id);
   `);
+
+  // Migration: add new columns if table existed from before
+  const tableInfo = db.prepare("PRAGMA table_info(aggregated_results)").all() as Array<{ name: string }>;
+  const names = new Set(tableInfo.map((r) => r.name));
+  if (!names.has("representative_labeler_pubkey")) {
+    db.exec("ALTER TABLE aggregated_results ADD COLUMN representative_labeler_pubkey TEXT");
+  }
+  if (!names.has("submitted_to_chain")) {
+    db.exec("ALTER TABLE aggregated_results ADD COLUMN submitted_to_chain INTEGER NOT NULL DEFAULT 0");
+  }
 
   return db;
 }
@@ -86,5 +98,7 @@ export type AggregatedRow = {
   item_id_hex: string;
   final_label_hex: string;
   confidence: number;
+  representative_labeler_pubkey: string | null;
   aggregated_at: number;
+  submitted_to_chain: number;
 };
