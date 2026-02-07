@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: "Quantico", system-ui, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e4e4e7;
+  background-color: #0a0a0b;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* Wallet adapter modal overrides for dark theme */
+.wallet-adapter-button {
+  font-family: "Quantico", monospace !important;
+}
+.wallet-adapter-modal-wrapper {
+  background: rgba(10, 10, 11, 0.9) !important;
+}
+.wallet-adapter-modal-container {
+  background: #18181b !important;
+  border: 1px solid #27272a !important;
+}
+.wallet-adapter-modal-title {
+  color: #e4e4e7 !important;
+  font-family: "Quantico", monospace !important;
+}

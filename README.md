@@ -15,4 +15,7 @@ Portfolio project: off-chain labeling + on-chain verification via an oracle. Pha
 
 - **In backend:** Run `npm run oracle` (after `npm run aggregate`). Uses `backend/idl/anchor_data.json` and oracle keypair; submits pending aggregated results to the Solana program. See [backend/README.md](backend/README.md).
 - **Prereqs:** Call **init_config** with the oracle pubkey once; put the oracle keypair in `backend/` (e.g. `oracle-keypair.json`). Copy IDL from `anchor_data/target/idl/` to `backend/idl/` after each `anchor build`.
-- Next: Phase 4 is the React frontend (Phantom, tasks, submit labels, view results).
+## Phase 4 – Frontend
+
+- **Folder:** [frontend/](frontend/) – React + Vite + TypeScript, Phantom wallet, dark sharp UI, Quantico font.
+- Run: `cd frontend && npm install && npm run dev`. Set `VITE_API_URL=http://localhost:3000` (or in `.env`) so the app talks to the backend. See [frontend/README.md](frontend/README.md).
