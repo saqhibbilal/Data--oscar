@@ -1,21 +1,21 @@
-# Decentralized data labeling (Solana)
+# Data Labeling (Solana)
 
-Portfolio project: off-chain labeling + on-chain verification via an oracle. Phases: 1 Anchor program, 2 backend + SQLite, 3 oracle script, 4 React frontend, 5 polish + optional multimodal.
+A small decentralized data-labeling app on Solana. Creators define text or image tasks; labelers submit labels off-chain; an oracle aggregates and publishes verified results on-chain. Reputation is tracked per labeler so contributors can build a visible history of work. Putting labels (or their commitments) on-chain gives you an auditable, tamper-resistant record—useful for training data provenance and for downstream use in contracts or rewards. Proof of reputation fits here naturally: the same chain that stores verified outcomes can attest who contributed, how much, and with what agreement rate, which opens the door to tokenomics, slashing, or reputation-based access later.
 
-## Phase 1 – Anchor program
+The stack is Solana (Anchor program), a Node/Express backend with SQLite, and a React + Vite frontend with Phantom (and other Solana wallets). Tasks and submissions live off-chain for cost and speed; only task registration and final aggregated results are written on-chain. This is a minimal version to validate the flow. Depending on where we want to push—staking, reputation weight, cost, or processing—we might later move to or complement with other chains or L2s.
 
-- **Workspace:** [anchor_data/](anchor_data/). Run `anchor` from inside **anchor_data/** (e.g. `cd anchor_data` then `anchor build` / `anchor deploy`).
-- See [anchor_data/README.md](anchor_data/README.md).
+**Flow:** Creators connect a wallet, define a task (description, rubric type, items), and create it; they can then register the task on Solana so it’s anchored on-chain. Labelers connect (same or different wallet), pick tasks from “Tasks to label,” submit labels per item (no chain tx), and see “Completed by you” and submission counts. The backend runs an aggregation step (e.g. majority vote) and an oracle script that posts pending results to the program; the dashboard shows task owners, tasks (on-chain vs pending), and labelers with their contribution counts so reputation is visible at a glance.
 
-## Phase 2 – Backend (Node + SQLite)
+We plan to extend beyond text and images to multimodal inputs (e.g. audio, video) so the same pipeline can handle richer tasks.
 
-- **Folder:** [backend/](backend/) – Express API, SQLite (tasks, items, submissions, aggregated_results), aggregation script (majority vote).
-- Run: `cd backend && npm install && npm run dev`. See [backend/README.md](backend/README.md).
-## Phase 3 – Oracle
+---
 
-- **In backend:** Run `npm run oracle` (after `npm run aggregate`). Uses `backend/idl/anchor_data.json` and oracle keypair; submits pending aggregated results to the Solana program. See [backend/README.md](backend/README.md).
-- **Prereqs:** Call **init_config** with the oracle pubkey once; put the oracle keypair in `backend/` (e.g. `oracle-keypair.json`). Copy IDL from `anchor_data/target/idl/` to `backend/idl/` after each `anchor build`.
-## Phase 4 – Frontend
+## Screenshots
 
-- **Folder:** [frontend/](frontend/) – React + Vite + TypeScript, Phantom wallet, dark sharp UI, Quantico font.
-- Run: `cd frontend && npm install && npm run dev`. Set `VITE_API_URL=http://localhost:3000` (or in `.env`) so the app talks to the backend. See [frontend/README.md](frontend/README.md).
+| Connect wallet                                          | Create task                                          | Labeler view                                     | Dashboard                                          |
+| ------------------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------ | -------------------------------------------------- |
+| ![Connect wallet](Screenshot%202026-02-08%20015119.jpg) | ![Create task](Screenshot%202026-02-08%20015152.jpg) | ![Labeler](Screenshot%202026-02-08%20015217.jpg) | ![Dashboard](Screenshot%202026-02-08%20015245.jpg) |
+
+_Connect a Solana wallet (e.g. Phantom), define a task with description and items, label tasks and track completed work, and see owners, tasks, and labeler reputation on the dashboard._
+
+---
