@@ -4,6 +4,16 @@ import { submitRouter } from "./routes/submit";
 import { getDb } from "./db";
 
 const app = express();
+
+// CORS: allow frontend (Vite default port)
+app.use((_req, res, next) => {
+  res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  if (_req.method === "OPTIONS") return res.sendStatus(200);
+  next();
+});
+
 app.use(express.json());
 
 app.use("/tasks", tasksRouter);

@@ -76,3 +76,16 @@ Optional env: `SOLANA_RPC_URL` (default devnet), `ORACLE_KEYPAIR_PATH` (default 
 The oracle only submits rows with `submitted_to_chain = 0` and sets them to `1` after a successful tx. Tasks must exist on-chain (same `owner_pubkey` and `dataset_ref_hex` as in the backend).
 
 # AMmT8iXxnn56Uzcjy5xSrvTAaHjVKA5aFjAcFHSBm5Ev
+
+# Create a task (use your wallet pubkey as owner)
+
+$body = @{
+owner_pubkey = "43dtP9kcYnyJgjmWXQncm8eCmDdwtgJ7X9bXcMdRMsVH"
+dataset_ref_hex = "0000000000000000000000000000000000000000000000000000000000000001"
+task_type = 0
+items = @(
+@{ item_id_hex = "0100000000000000000000000000000000000000000000000000000000000000"; content = "Sample text to label" }
+@{ item_id_hex = "0200000000000000000000000000000000000000000000000000000000000000"; content = "Another item" }
+)
+} | ConvertTo-Json -Depth 4
+Invoke-RestMethod -Uri "http://localhost:3000/tasks" -Method Post -Body $body -ContentType "application/json"

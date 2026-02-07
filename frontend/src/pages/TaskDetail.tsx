@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { fetchTask, submitLabels, fetchAggregated, type Task } from "../api/client";
 import { WalletGuard } from "../components/WalletGuard";
+import { registerTaskOnChain } from "../solana/initTask";
 
 type AggregatedRow = {
   item_id_hex: string;
@@ -13,13 +14,17 @@ type AggregatedRow = {
 export function TaskDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { publicKey, connected } = useWallet();
+  const wallet = useWallet();
+  const { publicKey, connected } = wallet;
+  const { connection } = useConnection();
   const [task, setTask] = useState<Task | null>(null);
   const [aggregated, setAggregated] = useState<AggregatedRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [labels, setLabels] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [registering, setRegistering] = useState(false);
+  const [registered, setRegistered] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -53,6 +58,31 @@ export function TaskDetail() {
       setSubmitting(false);
     }
   };
+
+  const handleRegisterOnChain = async () => {
+    if (!task || !publicKey) return;
+    if (task.owner_pubkey !== publicKey.toBase58()) {
+      setError("Only the task owner can register this task on Solana.");
+      return;
+    }
+    setRegistering(true);
+    setError(null);
+    try {
+      await registerTaskOnChain(connection, wallet, task);
+      setRegistered(true);
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes("already in use") || msg.includes("0x0")) {
+        setRegistered(true);
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  const isOwner = task && publicKey && task.owner_pubkey === publicKey.toBase58();
 
   if (!connected) {
     return (
@@ -88,6 +118,22 @@ export function TaskDetail() {
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm">
           {error}
+        </div>
+      )}
+
+      {isOwner && (
+        <div className="rounded-lg border border-border bg-surface-800 p-4">
+          <p className="text-sm text-zinc-400 mb-2">
+            Register this task on Solana so the oracle can submit verified results. (One-time, as task owner.)
+          </p>
+          <button
+            type="button"
+            onClick={handleRegisterOnChain}
+            disabled={registering || registered}
+            className="px-4 py-2 bg-surface-600 border border-border-bright text-white font-medium rounded hover:bg-surface-500 disabled:opacity-50 transition-colors"
+          >
+            {registered ? "Registered on Solana" : registering ? "Registering…" : "Register task on Solana"}
+          </button>
         </div>
       )}
 
