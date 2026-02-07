@@ -113,6 +113,9 @@ export function TaskDetail() {
           ← Back
         </button>
         <h1 className="text-2xl font-bold text-white tracking-tight">Task #{task.id}</h1>
+        <span className="text-xs text-zinc-500 bg-surface-600 px-2 py-1 rounded">
+          {task.task_type === 0 ? "Text" : task.task_type === 1 ? "Image" : "Audio"}
+        </span>
       </div>
 
       {error && (
@@ -154,7 +157,7 @@ export function TaskDetail() {
                     {item.item_id_hex.slice(0, 16)}…
                   </div>
                   <div className="text-sm text-zinc-300 mb-2">
-                    {item.content || "—"}
+                    <ItemContent content={item.content} contentType={item.content_type} />
                   </div>
                   <input
                     type="text"
@@ -203,6 +206,34 @@ export function TaskDetail() {
       )}
     </div>
   );
+}
+
+function ItemContent({
+  content,
+  contentType,
+}: {
+  content: string | null;
+  contentType: string;
+}) {
+  if (!content?.trim()) return <span>—</span>;
+  const type = (contentType || "text").toLowerCase();
+  if (type === "image") {
+    return (
+      <img
+        src={content}
+        alt="Item"
+        className="max-w-full max-h-48 rounded border border-border object-contain"
+      />
+    );
+  }
+  if (type === "audio") {
+    return (
+      <audio controls className="w-full max-w-md" src={content}>
+        Your browser does not support audio.
+      </audio>
+    );
+  }
+  return <span>{content}</span>;
 }
 
 function hexToShortLabel(hex: string): string {
