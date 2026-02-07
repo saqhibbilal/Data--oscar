@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { createTask, type CreateTaskBody } from "../api/client";
+import { createTask, uploadFile, type CreateTaskBody } from "../api/client";
 import { WalletGuard } from "../components/WalletGuard";
 
 const TASK_TYPES = [
@@ -38,8 +38,12 @@ export function CreateTask() {
   const navigate = useNavigate();
   const { publicKey, connected } = useWallet();
   const [taskType, setTaskType] = useState(0);
+  const [description, setDescription] = useState("");
+  const [rubrics, setRubrics] = useState("");
+  const [rubricType, setRubricType] = useState<"single_choice" | "free_text">("free_text");
   const [items, setItems] = useState<ItemRow[]>([{ content: "", content_type: "text" }]);
   const [submitting, setSubmitting] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const addItem = () => setItems((prev) => [...prev, { content: "", content_type: CONTENT_TYPES[taskType] }]);
@@ -67,6 +71,9 @@ export function CreateTask() {
         owner_pubkey: publicKey.toBase58(),
         dataset_ref_hex: datasetRefHex,
         task_type: taskType,
+        description: description.trim() || null,
+        rubrics: rubrics.trim() || null,
+        rubric_type: rubricType,
         items: valid.map((r, i) => ({
           item_id_hex: generateItemId(i),
           content: r.content.trim(),
@@ -111,6 +118,40 @@ export function CreateTask() {
 
       <div className="rounded-lg border border-border bg-surface-800 p-6 space-y-6">
         <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Task description</label>
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="What should labelers do?"
+            rows={3}
+            className="w-full bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Rubric type</label>
+          <select
+            value={rubricType}
+            onChange={(e) => setRubricType(e.target.value as "single_choice" | "free_text")}
+            className="bg-surface-700 border border-border rounded px-3 py-2 text-white font-quantico"
+          >
+            <option value="free_text">Free text (any label)</option>
+            <option value="single_choice">Single choice (from rubrics below)</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Rubrics</label>
+          <textarea
+            value={rubrics}
+            onChange={(e) => setRubrics(e.target.value)}
+            placeholder={rubricType === "single_choice" ? "One option per line, e.g. Positive\nNegative\nNeutral" : "Optional: suggested labels (one per line)"}
+            rows={3}
+            className="w-full bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
+          />
+        </div>
+
+        <div>
           <label className="block text-sm font-medium text-zinc-400 mb-2">Task type</label>
           <select
             value={taskType}
@@ -142,14 +183,45 @@ export function CreateTask() {
           </div>
           <ul className="space-y-4">
             {items.map((item, i) => (
-              <li key={i} className="flex gap-2 items-start">
+              <li key={i} className="flex gap-2 items-start flex-wrap">
                 <input
                   type="text"
-                  placeholder={taskType === 0 ? "Text content" : taskType === 1 ? "Image URL" : "Audio URL"}
+                  placeholder={taskType === 0 ? "Text content" : taskType === 1 ? "Image URL or upload below" : "Audio URL or upload below"}
                   value={item.content}
                   onChange={(e) => updateItem(i, "content", e.target.value)}
-                  className="flex-1 bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
+                  className="flex-1 min-w-[200px] bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
                 />
+                {(taskType === 1 || taskType === 2) && (
+                  <label className="px-3 py-2 bg-surface-600 border border-border rounded text-sm text-zinc-300 cursor-pointer hover:bg-surface-500">
+                    Upload
+                    <input
+                      type="file"
+                      accept={taskType === 1 ? "image/*" : "audio/*"}
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setUploading(true);
+                        try {
+                          const base64 = await new Promise<string>((res, rej) => {
+                            const r = new FileReader();
+                            r.onload = () => res((r.result as string).split(",")[1] || "");
+                            r.onerror = rej;
+                            r.readAsDataURL(file);
+                          });
+                          const url = await uploadFile(base64, file.name);
+                          updateItem(i, "content", url);
+                        } catch (err: any) {
+                          setError(err.message || "Upload failed");
+                        } finally {
+                          setUploading(false);
+                          e.target.value = "";
+                        }
+                      }}
+                    />
+                  </label>
+                )}
                 <button
                   type="button"
                   onClick={() => removeItem(i)}

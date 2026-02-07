@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { fetchTask, submitLabels, fetchAggregated, type Task } from "../api/client";
+import { fetchTask, submitLabels, fetchAggregated, fetchMySubmissions, type Task } from "../api/client";
 import { WalletGuard } from "../components/WalletGuard";
 import { registerTaskOnChain } from "../solana/initTask";
 
@@ -19,6 +19,7 @@ export function TaskDetail() {
   const { connection } = useConnection();
   const [task, setTask] = useState<Task | null>(null);
   const [aggregated, setAggregated] = useState<AggregatedRow[]>([]);
+  const [mySubmissions, setMySubmissions] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [labels, setLabels] = useState<Record<string, string>>({});
@@ -37,6 +38,19 @@ export function TaskDetail() {
       .finally(() => setLoading(false));
   }, [id]);
 
+  useEffect(() => {
+    if (!id || !publicKey) return;
+    fetchMySubmissions(id, publicKey.toBase58())
+      .then((list) => {
+        const map: Record<string, string> = {};
+        list.forEach((s) => {
+          map[s.item_id_hex] = s.label_value;
+        });
+        setMySubmissions(map);
+      })
+      .catch(() => setMySubmissions({}));
+  }, [id, publicKey]);
+
   const handleSubmit = async () => {
     if (!task || !publicKey) return;
     const submissions = Object.entries(labels)
@@ -51,6 +65,7 @@ export function TaskDetail() {
     try {
       await submitLabels(task.id, publicKey.toBase58(), submissions);
       setLabels({});
+      setMySubmissions((prev) => ({ ...prev, ...Object.fromEntries(submissions.map((s) => [s.item_id_hex, s.label_value])) }));
       navigate("/");
     } catch (e: any) {
       setError(e.message || "Submit failed");
@@ -117,6 +132,20 @@ export function TaskDetail() {
           {task.task_type === 0 ? "Text" : task.task_type === 1 ? "Image" : "Audio"}
         </span>
       </div>
+      {task.description && (
+        <div className="rounded-lg border border-border bg-surface-800 p-4">
+          <p className="text-sm font-medium text-zinc-400 mb-1">Description</p>
+          <p className="text-zinc-300 text-sm">{task.description}</p>
+          {task.rubrics && (
+            <>
+              <p className="text-sm font-medium text-zinc-400 mt-3 mb-1">
+                Rubrics {task.rubric_type === "single_choice" ? "(choose one)" : ""}
+              </p>
+              <p className="text-zinc-300 text-sm whitespace-pre-wrap">{task.rubrics}</p>
+            </>
+          )}
+        </div>
+      )}
 
       {error && (
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-400 text-sm">
@@ -127,7 +156,7 @@ export function TaskDetail() {
       {isOwner && (
         <div className="rounded-lg border border-border bg-surface-800 p-4">
           <p className="text-sm text-zinc-400 mb-2">
-            Register this task on Solana so the oracle can submit verified results. (One-time, as task owner.)
+            As <strong className="text-white">task owner</strong>: register this task on Solana once so the oracle can submit verified results. Labelers never need to do this.
           </p>
           <button
             type="button"
@@ -137,6 +166,12 @@ export function TaskDetail() {
           >
             {registered ? "Registered on Solana" : registering ? "Registering…" : "Register task on Solana"}
           </button>
+        </div>
+      )}
+
+      {!isOwner && (
+        <div className="rounded-lg border border-border bg-surface-700/50 p-3 text-sm text-zinc-400">
+          As a <strong className="text-white">labeler</strong>: your labels are saved off-chain. Only the oracle submits verified results to Solana. You don’t sign a wallet transaction to submit labels.
         </div>
       )}
 
@@ -151,36 +186,49 @@ export function TaskDetail() {
               Label each item
             </div>
             <ul className="divide-y divide-border">
-              {items.map((item) => (
-                <li key={item.id} className="px-4 py-4">
-                  <div className="text-xs text-zinc-500 font-mono mb-2">
-                    {item.item_id_hex.slice(0, 16)}…
-                  </div>
-                  <div className="text-sm text-zinc-300 mb-2">
-                    <ItemContent content={item.content} contentType={item.content_type} />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Your label"
-                    value={labels[item.item_id_hex] ?? ""}
-                    onChange={(e) =>
-                      setLabels((prev) => ({ ...prev, [item.item_id_hex]: e.target.value }))
-                    }
-                    className="w-full max-w-xs bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent font-quantico"
-                  />
-                </li>
-              ))}
+              {items.map((item) => {
+                const alreadyLabeled = mySubmissions[item.item_id_hex];
+                return (
+                  <li key={item.id} className="px-4 py-4">
+                    <div className="text-xs text-zinc-500 font-mono mb-2">
+                      {item.item_id_hex.slice(0, 16)}…
+                    </div>
+                    <div className="text-sm text-zinc-300 mb-2">
+                      <ItemContent content={item.content} contentType={item.content_type} />
+                    </div>
+                    {alreadyLabeled ? (
+                      <p className="text-sm text-accent">You labeled: {alreadyLabeled}</p>
+                    ) : (
+                      <input
+                        type="text"
+                        placeholder="Your label"
+                        value={labels[item.item_id_hex] ?? ""}
+                        onChange={(e) =>
+                          setLabels((prev) => ({ ...prev, [item.item_id_hex]: e.target.value }))
+                        }
+                        className="w-full max-w-xs bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent font-quantico"
+                      />
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-            <div className="border-t border-border px-4 py-3">
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="px-4 py-2 bg-accent text-surface-900 font-bold rounded hover:bg-accent-dim disabled:opacity-50 transition-colors"
-              >
-                {submitting ? "Submitting…" : "Submit labels"}
-              </button>
-            </div>
+            {items.some((item) => !mySubmissions[item.item_id_hex]) ? (
+              <div className="border-t border-border px-4 py-3">
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="px-4 py-2 bg-accent text-surface-900 font-bold rounded hover:bg-accent-dim disabled:opacity-50 transition-colors"
+                >
+                  {submitting ? "Submitting…" : "Submit labels"}
+                </button>
+              </div>
+            ) : (
+              <div className="border-t border-border px-4 py-3 text-sm text-zinc-500">
+                You’ve completed this task.
+              </div>
+            )}
           </div>
         </div>
       )}

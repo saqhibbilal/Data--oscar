@@ -17,6 +17,9 @@ export function getDb(): Database.Database {
       owner_pubkey TEXT NOT NULL,
       dataset_ref_hex TEXT NOT NULL,
       task_type INTEGER NOT NULL,
+      description TEXT,
+      rubrics TEXT,
+      rubric_type TEXT,
       created_at INTEGER NOT NULL DEFAULT (unixepoch())
     );
 
@@ -63,6 +66,12 @@ export function getDb(): Database.Database {
   if (!names.has("submitted_to_chain")) {
     db.exec("ALTER TABLE aggregated_results ADD COLUMN submitted_to_chain INTEGER NOT NULL DEFAULT 0");
   }
+
+  const taskInfo = db.prepare("PRAGMA table_info(tasks)").all() as Array<{ name: string }>;
+  const taskNames = new Set(taskInfo.map((r) => r.name));
+  if (!taskNames.has("description")) db.exec("ALTER TABLE tasks ADD COLUMN description TEXT");
+  if (!taskNames.has("rubrics")) db.exec("ALTER TABLE tasks ADD COLUMN rubrics TEXT");
+  if (!taskNames.has("rubric_type")) db.exec("ALTER TABLE tasks ADD COLUMN rubric_type TEXT");
 
   return db;
 }
