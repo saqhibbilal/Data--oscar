@@ -114,43 +114,54 @@ export function CreateTask() {
         </div>
       )}
 
+      <p className="text-sm text-zinc-500">
+        Define what labelers will see and which answers they can give. Add your data items below; each gets one label per labeler.
+      </p>
+
       <div className="rounded-lg border border-border bg-surface-800 p-6 space-y-6">
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Task description</label>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Instructions for labelers</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="What should labelers do?"
+            placeholder="e.g. For each sentence, pick one: Positive, Negative, or Neutral."
             rows={3}
             className="w-full bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Rubric type</label>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Answer type</label>
           <select
             value={rubricType}
             onChange={(e) => setRubricType(e.target.value as "single_choice" | "free_text")}
             className="bg-surface-700 border border-border rounded px-3 py-2 text-white font-quantico"
           >
-            <option value="free_text">Free text (any label)</option>
-            <option value="single_choice">Single choice (from rubrics below)</option>
+            <option value="single_choice">Single choice — labelers pick one option from the list below</option>
+            <option value="free_text">Free text — labelers can type any answer (optional suggestions below)</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Rubrics</label>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">
+            {rubricType === "single_choice" ? "Label options (one per line)" : "Suggested labels (optional)"}
+          </label>
+          <p className="text-xs text-zinc-500 mb-1">
+            {rubricType === "single_choice"
+              ? "These are the only choices labelers can pick. One option per line."
+              : "Guide labelers with examples; they can still type something else."}
+          </p>
           <textarea
             value={rubrics}
             onChange={(e) => setRubrics(e.target.value)}
-            placeholder={rubricType === "single_choice" ? "One option per line, e.g. Positive\nNegative\nNeutral" : "Optional: suggested labels (one per line)"}
+            placeholder={rubricType === "single_choice" ? "Positive\nNegative\nNeutral" : "e.g. spam\nnot spam"}
             rows={3}
             className="w-full bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-zinc-400 mb-2">Task type</label>
+          <label className="block text-sm font-medium text-zinc-400 mb-2">Content type</label>
           <select
             value={taskType}
             onChange={(e) => {
@@ -170,7 +181,7 @@ export function CreateTask() {
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label className="text-sm font-medium text-zinc-400">Items</label>
+            <label className="text-sm font-medium text-zinc-400">Data to label</label>
             <button
               type="button"
               onClick={addItem}
@@ -179,12 +190,15 @@ export function CreateTask() {
               + Add item
             </button>
           </div>
+          <p className="text-xs text-zinc-500 mb-2">
+            One row = one item. Each item will be shown to labelers so they can assign a label.
+          </p>
           <ul className="space-y-4">
             {items.map((item, i) => (
               <li key={i} className="flex gap-2 items-start flex-wrap">
                 <input
                   type="text"
-                  placeholder={taskType === 0 ? "Text content" : "Image URL or upload below"}
+                  placeholder={taskType === 0 ? "e.g. The product arrived on time and works great." : "Image URL or use Upload below"}
                   value={item.content}
                   onChange={(e) => updateItem(i, "content", e.target.value)}
                   className="flex-1 min-w-[200px] bg-surface-700 border border-border rounded px-3 py-2 text-white placeholder-zinc-500 focus:outline-none focus:ring-1 focus:ring-accent font-quantico"

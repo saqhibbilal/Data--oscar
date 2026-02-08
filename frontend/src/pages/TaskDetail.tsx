@@ -33,6 +33,7 @@ export function TaskDetail() {
       .then(([t, agg]) => {
         setTask(t);
         setAggregated(agg as AggregatedRow[]);
+        setRegistered(!!(t as Task).registered_on_chain);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -154,25 +155,34 @@ export function TaskDetail() {
         </div>
       )}
 
-      {isOwner && (
+      {isOwner && !task.registered_on_chain && !registered && (
         <div className="rounded-lg border border-border bg-surface-800 p-4">
           <p className="text-sm text-zinc-400 mb-2">
-            As <strong className="text-white">task owner</strong>: register this task on Solana once so the oracle can submit verified results. Labelers do not use Solana to submit labels.
+            Register this task on Solana once so the oracle can later submit verified results. Labelers do not sign transactions; only you register the task.
           </p>
           <button
             type="button"
             onClick={handleRegisterOnChain}
-            disabled={registering || registered}
+            disabled={registering}
             className="px-4 py-2 bg-surface-600 border border-border-bright text-white font-medium rounded hover:bg-surface-500 disabled:opacity-50 transition-colors"
           >
-            {registered ? "Registered on Solana" : registering ? "Registering…" : "Register task on Solana"}
+            {registering ? "Registering…" : "Register task on Solana"}
           </button>
+        </div>
+      )}
+
+      {isOwner && (task.registered_on_chain || registered) && (
+        <div className="rounded-lg border border-border bg-surface-800/80 p-4">
+          <p className="text-sm font-medium text-zinc-300 mb-1">Task is on Solana</p>
+          <p className="text-sm text-zinc-500">
+            Once labelers have submitted, run on the backend: <code className="bg-surface-700 px-1 rounded">npm run aggregate</code> then <code className="bg-surface-700 px-1 rounded">npm run oracle</code> to publish verified results on-chain.
+          </p>
         </div>
       )}
 
       {!isOwner && (
         <div className="rounded-lg border border-border bg-surface-700/50 p-3 text-sm text-zinc-400">
-          As a <strong className="text-white">labeler</strong>: your labels are saved off-chain. Only the oracle submits verified results to Solana. You don’t sign a wallet transaction to submit labels.
+          Your labels are saved off-chain. You don’t sign a wallet transaction to submit.
         </div>
       )}
 
